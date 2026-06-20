@@ -70,7 +70,7 @@ public class AuthServiceImpl implements AuthService {
         // Step 2 - Load user from DB
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() ->
-                        new RuntimeException("User not found"));
+                        new ResourceNotFoundException("User not found"));
 
         // Step 3 - Verify current password
         if (!passwordEncoder.matches(
