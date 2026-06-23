@@ -42,6 +42,15 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
+    //Handles Emailnotsending error
+    @ExceptionHandler(EmailSendingException.class)
+    public ResponseEntity<Map<String,String>> handleEmailSending(EmailSendingException ex)
+    {
+           Map<String,String>error=new HashMap<>();
+           error.put("error",ex.getMessage());
+           return new ResponseEntity<>(error,HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
     // Handles all other exceptions
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleGeneral(

@@ -27,7 +27,7 @@ public class MemberController {
     }
 
     @PutMapping("/{id}/deactivate")
-    public ResponseEntity<MemberResponse>deactivateMember(@PathVariable Long id) {
+    public ResponseEntity<String>deactivateMember(@PathVariable Long id) {
         return null;
     }
 }
