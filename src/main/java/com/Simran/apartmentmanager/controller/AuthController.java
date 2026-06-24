@@ -6,6 +6,7 @@ import com.Simran.apartmentmanager.dto.LoginResponse;
 import com.Simran.apartmentmanager.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,12 +21,12 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse>login(@Valid @RequestBody LoginRequest request)
     {
-        return ResponseEntity.ok(authService.login(request));
+        return new ResponseEntity<>(authService.login(request), HttpStatus.OK);
     }
 
     @PostMapping("/change-password")
     public ResponseEntity<String> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
-        return ResponseEntity.ok(authService.changePassword(request));
+        return new ResponseEntity<>(authService.changePassword(request),HttpStatus.OK);
 
     }
 
