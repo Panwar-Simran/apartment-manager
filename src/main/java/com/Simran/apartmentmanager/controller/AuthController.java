@@ -28,6 +28,7 @@ public class AuthController {
     public ResponseEntity<String> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
         return new ResponseEntity<>(authService.changePassword(request),HttpStatus.OK);
 
+
     }
 
 }
