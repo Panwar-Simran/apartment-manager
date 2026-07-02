@@ -11,6 +11,7 @@ import com.Simran.apartmentmanager.repository.PaymentRecordRepository;
 import com.Simran.apartmentmanager.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -30,7 +31,8 @@ public class MaintenanceCycleServiceImpl {
     PaymentRecordRepository paymentRecordRepository;
 
     //create cycle
-    MaintenanceCycleResponse createCycle(MaintenanceCycleRequest request){
+    @Transactional
+  public  MaintenanceCycleResponse createCycle(MaintenanceCycleRequest request){
        //1. Check Duplicate Entry
         if(maintenanceCycleRepository.existsByMonthAndYear(request.getMonth(), request.getYear()))
        {
@@ -84,7 +86,7 @@ public class MaintenanceCycleServiceImpl {
     }
 
     //get all cycles
-    List<MaintenanceCycleResponse> getAllCycles(){
+    public List<MaintenanceCycleResponse> getAllCycles(){
        List<MaintenanceCycle>cycles=maintenanceCycleRepository.findAll();
        List<MaintenanceCycleResponse>maintenanceCycleResponses=new ArrayList<>();
 
