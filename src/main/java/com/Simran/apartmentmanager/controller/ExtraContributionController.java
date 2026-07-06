@@ -55,4 +55,11 @@ public class ExtraContributionController {
         return new ResponseEntity<>(
                 extraContributionService.getMyContributions(), HttpStatus.OK);
     }
+
+    @GetMapping("/status/{status}")
+    public ResponseEntity<List<ExtraContributionResponse>>
+    getContributionsByStatus(@PathVariable String status) {
+        return new ResponseEntity<>(extraContributionService.getContributionsByStatus(status),
+                HttpStatus.OK);
+    }
 }
