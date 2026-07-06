@@ -10,7 +10,7 @@ import java.util.List;
 public interface ExtraContributionRepository extends JpaRepository<ExtraContribution,Long> {
 
     // Find all contributions by a specific member
-    List<ExtraContribution>findByUser(Long userId);
+    List<ExtraContribution>findByUserId(Long userId);
 
     // Find all contributions by status
     List<ExtraContribution> findByStatus(String status);
