@@ -78,7 +78,7 @@ public class ExtraContributionServiceImpl implements ExtraContributionService {
     public ExtraContributionResponse approveContribution(Long id) {
         // Step 1 - Find contribution
 
-        ExtraContribution contribution = extraContributionRepository.findById()
+        ExtraContribution contribution = extraContributionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException
                         ("Contribution not found with id: " + id));
 
