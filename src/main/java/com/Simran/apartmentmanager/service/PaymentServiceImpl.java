@@ -53,6 +53,11 @@ public class PaymentServiceImpl implements PaymentService {
             throw new BadRequestException("Already paid for this cycle!");
         }
 
+        if (paymentRecord.getStatus().equals("UNDER_REVIEW")) {
+            throw new BadRequestException(
+                    "Payment already submitted and is under review!");
+        }
+
         // Step 4 - Check member credit balance
         BigDecimal creditBalance = memberCreditService
                 .getCreditBalance(user.getId());
