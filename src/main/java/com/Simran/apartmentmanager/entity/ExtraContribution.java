@@ -25,7 +25,7 @@ public class ExtraContribution {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name="approved_by", nullable=false)
+    @JoinColumn(name="approved_by")
     private User approvedBy;
 
     @Column(nullable = false)
