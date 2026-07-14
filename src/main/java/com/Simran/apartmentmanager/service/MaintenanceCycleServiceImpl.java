@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class MaintenanceCycleServiceImpl {
+public class MaintenanceCycleServiceImpl implements MaintenanceCycleService {
 
 @Autowired
     MaintenanceCycleRepository maintenanceCycleRepository;
@@ -31,6 +31,7 @@ public class MaintenanceCycleServiceImpl {
     PaymentRecordRepository paymentRecordRepository;
 
     //create cycle
+    @Override
     @Transactional
   public  MaintenanceCycleResponse createCycle(MaintenanceCycleRequest request){
        //1. Check Duplicate Entry
@@ -86,6 +87,7 @@ public class MaintenanceCycleServiceImpl {
     }
 
     //get all cycles
+    @Override
     public List<MaintenanceCycleResponse> getAllCycles(){
        List<MaintenanceCycle>cycles=maintenanceCycleRepository.findAll();
        List<MaintenanceCycleResponse>maintenanceCycleResponses=new ArrayList<>();
