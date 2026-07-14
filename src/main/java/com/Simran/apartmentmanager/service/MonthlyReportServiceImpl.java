@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class MonthlyReportServiceImpl {
+public class MonthlyReportServiceImpl implements MonthlyReportService {
     @Autowired
     MaintenanceCycleRepository maintenanceCycleRepository;
 
@@ -28,6 +28,7 @@ public class MonthlyReportServiceImpl {
     @Autowired
     ExpenseRepository expenseRepository;
 
+    @Override
    public MonthlyReportResponse getMonthlyReport(int month, int year){
        // Step 1 - Find maintenance cycle for this month and year
        MaintenanceCycle cycle = maintenanceCycleRepository
