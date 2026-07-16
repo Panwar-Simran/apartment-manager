@@ -66,15 +66,29 @@ public class SecurityConfig {
                         .requestMatchers("/api/payments/**")
                         .authenticated()
 
-                        // ─── EXTRA CONTRIBUTIONS ──────────────────────────
-                        // Approve and Reject → Pradhana only
-                        // Submit and View → Both roles
-                        .requestMatchers(HttpMethod.PUT,
-                                "/api/contributions/*/approve",
-                                "/api/contributions/*/reject")
-                        .hasRole("PRADHANA")
-                        .requestMatchers("/api/contributions/**")
-                        .authenticated()
+                                // ─── EXTRA CONTRIBUTIONS ──────────────────────────
+
+// 1. Submit → both roles (POST)
+                                .requestMatchers(HttpMethod.POST,
+                                        "/api/contributions/submit")
+                                .authenticated()
+
+                       // 2. Approve, Reject → Pradhana only (PUT)
+                                .requestMatchers(HttpMethod.PUT,
+                                        "/api/contributions/*/approve",
+                                        "/api/contributions/*/reject")
+                                .hasRole("PRADHANA")
+
+                                // 3. View ALL → Pradhana only (GET)
+                                .requestMatchers(HttpMethod.GET,
+                                        "/api/contributions/all",
+                                        "/api/contributions/status/*")
+                                .hasRole("PRADHANA")
+
+                         // 4. View OWN → both roles (GET)
+                                .requestMatchers(HttpMethod.GET,
+                                        "/api/contributions/my")
+                                .authenticated()
 
                         // ─── MEETINGS ─────────────────────────────────────
                         // Create and Delete → Pradhana only
