@@ -24,4 +24,15 @@ public class MonthlyReportController {
                 (monthlyReportService.getMonthlyReport(month, year), HttpStatus.OK);
     }
 
+
+    // Both roles - own payment + expenses only
+    @GetMapping("/my/{month}/year/{year}")
+    public ResponseEntity<MonthlyReportResponse> getMyMonthlyReport(
+            @PathVariable int month,
+            @PathVariable int year) {
+        return new ResponseEntity<>(
+                monthlyReportService.getMyMonthlyReport(month, year),
+                HttpStatus.OK);
+    }
+
 }

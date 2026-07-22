@@ -7,4 +7,6 @@ public interface MonthlyReportService {
     // Shows total collected, total expenses, closing balance
     // Member wise payment status and expense details
     MonthlyReportResponse getMonthlyReport(int month, int year);
+    // Member → only own payment + expenses
+    MonthlyReportResponse getMyMonthlyReport(int month, int year);
 }

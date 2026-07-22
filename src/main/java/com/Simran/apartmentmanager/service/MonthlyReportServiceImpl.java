@@ -6,11 +6,14 @@ import com.Simran.apartmentmanager.dto.PaymentResponse;
 import com.Simran.apartmentmanager.entity.Expense;
 import com.Simran.apartmentmanager.entity.MaintenanceCycle;
 import com.Simran.apartmentmanager.entity.PaymentRecord;
+import com.Simran.apartmentmanager.entity.User;
 import com.Simran.apartmentmanager.exception.ResourceNotFoundException;
 import com.Simran.apartmentmanager.repository.ExpenseRepository;
 import com.Simran.apartmentmanager.repository.MaintenanceCycleRepository;
 import com.Simran.apartmentmanager.repository.PaymentRecordRepository;
+import com.Simran.apartmentmanager.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -24,6 +27,9 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
 
     @Autowired
     PaymentRecordRepository paymentRecordRepository;
+
+    @Autowired
+    UserRepository userRepository;
 
     @Autowired
     ExpenseRepository expenseRepository;
@@ -140,5 +146,111 @@ public class MonthlyReportServiceImpl implements MonthlyReportService {
        return report;
 
    }
+
+
+    @Override
+    public MonthlyReportResponse getMyMonthlyReport(
+            int month, int year) {
+
+        // Step 1 - Get logged in member
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+
+        User member = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found"));
+
+        // Step 2 - Find cycle
+        MaintenanceCycle cycle = maintenanceCycleRepository
+                .findByMonthAndYear(month, year)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "No cycle found for month: "
+                                        + month + " year: " + year));
+
+        // Step 3 - Get only THIS member's payment record
+        PaymentRecord myRecord = paymentRecordRepository
+                .findByCycleIdAndUserId(
+                        cycle.getId(), member.getId())
+                .orElse(null);
+
+        // Step 4 - Build own payment detail
+        List<PaymentResponse> myPaymentDetails = new ArrayList<>();
+        BigDecimal myPaidAmount = BigDecimal.ZERO;
+        BigDecimal myPending = BigDecimal.ZERO;
+
+        if (myRecord != null) {
+            PaymentResponse paymentResponse = new PaymentResponse();
+            paymentResponse.setId(myRecord.getId());
+            paymentResponse.setCycleId(cycle.getId());
+            paymentResponse.setMonth(cycle.getMonth());
+            paymentResponse.setYear(cycle.getYear());
+            paymentResponse.setUserId(myRecord.getUser().getId());
+            paymentResponse.setMemberName(
+                    myRecord.getUser().getName());
+            paymentResponse.setFlatNumber(
+                    myRecord.getUser().getFlatNumber());
+            paymentResponse.setPaidAmount(myRecord.getPaidAmount());
+            paymentResponse.setCreditUsed(myRecord.getCreditUsed());
+            paymentResponse.setFinalDue(myRecord.getFinalDue());
+            paymentResponse.setPaymentMode(myRecord.getPaymentMode());
+            paymentResponse.setTransactionRef(
+                    myRecord.getTransactionRef());
+            paymentResponse.setScreenshotUrl(
+                    myRecord.getScreenshotUrl());
+            paymentResponse.setStatus(myRecord.getStatus());
+            paymentResponse.setPaymentDate(myRecord.getPaymentDate());
+            paymentResponse.setCreatedAt(myRecord.getCreatedAt());
+            myPaymentDetails.add(paymentResponse);
+
+            if (myRecord.getStatus().equals("PAID")) {
+                myPaidAmount = myRecord.getPaidAmount();
+            } else {
+                myPending = myRecord.getFinalDue();
+            }
+        }
+
+        // Step 5 - Get all expenses (public to all)
+        List<Expense> expenses = expenseRepository
+                .findByMonthAndYear(month, year);
+
+        BigDecimal totalExpenses = BigDecimal.ZERO;
+        List<ExpenseResponse> expenseDetails = new ArrayList<>();
+
+        for (Expense expense : expenses) {
+            totalExpenses = totalExpenses.add(expense.getAmount());
+
+            ExpenseResponse expenseResponse = new ExpenseResponse();
+            expenseResponse.setId(expense.getId());
+            expenseResponse.setCategoryId(
+                    expense.getCategory().getId());
+            expenseResponse.setCategoryName(
+                    expense.getCategory().getName());
+            expenseResponse.setCategoryType(
+                    expense.getCategory().getType());
+            expenseResponse.setAddedByName(
+                    expense.getAddedBy().getName());
+            expenseResponse.setAmount(expense.getAmount());
+            expenseResponse.setDescription(expense.getDescription());
+            expenseResponse.setExpenseDate(expense.getExpenseDate());
+            expenseResponse.setReceiptUrl(expense.getReceiptUrl());
+            expenseResponse.setCreatedAt(expense.getCreatedAt());
+            expenseDetails.add(expenseResponse);
+        }
+
+        // Step 6 - Build response
+        MonthlyReportResponse report = new MonthlyReportResponse();
+        report.setMonth(month);
+        report.setYear(year);
+        report.setTotalExpected(cycle.getAmountPerMember());
+        report.setTotalCollected(myPaidAmount);
+        report.setTotalPending(myPending);
+        report.setTotalExpenses(totalExpenses);
+        report.setClosingBalance(BigDecimal.ZERO);
+        report.setPaymentDetails(myPaymentDetails);
+        report.setExpenseDetails(expenseDetails);
+
+        return report;
+    }
 
 }
