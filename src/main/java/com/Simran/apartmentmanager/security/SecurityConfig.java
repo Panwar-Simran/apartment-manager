@@ -43,9 +43,21 @@ public class SecurityConfig {
                         .hasRole("PRADHANA")
 
                         // ─── MAINTENANCE CYCLE (Pradhana only) ───────────
-                        .requestMatchers("/api/maintenance/**")
-                        .hasRole("PRADHANA")
+                                // Create → Pradhana only
+                                .requestMatchers(HttpMethod.POST,
+                                        "/api/maintenance/**")
+                                .hasRole("PRADHANA")
 
+                                   // View → Both roles
+                                  // Member needs to see current cycle amount
+                                .requestMatchers(HttpMethod.GET,
+                                        "/api/maintenance/**")
+                                .authenticated()
+
+                                // View by cycle → Pradhana only
+                                .requestMatchers(HttpMethod.GET,
+                                        "/api/payments/cycle/**")
+                                .hasRole("PRADHANA")
                         // ─── EXPENSES ─────────────────────────────────────
                         // Only POST (add) is Pradhana only
                         // GET (view) is both roles
@@ -103,10 +115,16 @@ public class SecurityConfig {
                                 "/api/meetings/**")
                         .authenticated()
 
-                        // ─── MONTHLY REPORT ───────────────────────────────
-                        // Both roles can view
-                        .requestMatchers("/api/reports/**")
-                        .authenticated()
+                                // ─── MONTHLY REPORT ───────────────────────────────
+                               // Full report → Pradhana only
+                                .requestMatchers(HttpMethod.GET,
+                                        "/api/reports/monthly/**")
+                                .hasRole("PRADHANA")
+
+                                  // My report → both roles
+                                .requestMatchers(HttpMethod.GET,
+                                        "/api/reports/my/**")
+                                .authenticated()
 
                         // ─── MEMBER CREDITS ───────────────────────────────
                         // Both roles can view
