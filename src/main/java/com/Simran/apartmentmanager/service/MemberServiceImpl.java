@@ -113,16 +113,24 @@ public class MemberServiceImpl implements MemberService {
     @Override
     public String deactivateMember(Long id)
     {
-        // Step 1 - Find member by id
         User user = userRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
                                 "Member not found with id: " + id));
 
-        // Step 2 - Set inactive
-        user.setIsActive(false);
+        // Cannot deactivate Pradhana!
+        if (user.getRole().equals("PRADHANA")) {
+            throw new BadRequestException(
+                    "Cannot deactivate Pradhana!");
+        }
 
-        // Step 3 - Save
+        // Cannot deactivate already inactive member
+        if (!user.getIsActive()) {
+            throw new BadRequestException(
+                    "Member is already inactive!");
+        }
+
+        user.setIsActive(false);
         userRepository.save(user);
 
         return "Member deactivated successfully";
