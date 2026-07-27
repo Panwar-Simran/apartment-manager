@@ -31,7 +31,8 @@ public class ExtraContributionServiceImpl implements ExtraContributionService {
 
     @Override
     public ExtraContributionResponse submitContribution(ExtraContributionRequest request) {
-        // Step 1 - Get logged in member
+
+        // Step 1 - Get logged in user
         String email = SecurityContextHolder.getContext()
                 .getAuthentication().getName();
 
@@ -46,16 +47,27 @@ public class ExtraContributionServiceImpl implements ExtraContributionService {
         contribution.setAmount(request.getAmount());
         contribution.setContributionDate(request.getContributionDate());
         contribution.setProofUrl(request.getProofUrl());
-        contribution.setStatus("PENDING");
         contribution.setCreatedAt(LocalDateTime.now());
 
-        // Step 3 - Save contribution
+        // Step 3 - If Pradhana → auto approve
+        // If Member → set PENDING for Pradhana approval
+        if (member.getRole().equals("PRADHANA")) {
+            contribution.setStatus("APPROVED");
+            contribution.setApprovedBy(member);
+            // Auto add credit to Pradhana
+            memberCreditService.addCredit(
+                    member.getId(), request.getAmount());
+        } else {
+            contribution.setStatus("PENDING");
+        }
+
+        // Step 4 - Save
         ExtraContribution savedContribution =
                 extraContributionRepository.save(contribution);
 
-        // Step 4 - Build response
-        ExtraContributionResponse response = new ExtraContributionResponse();
-
+        // Step 5 - Build response
+        ExtraContributionResponse response =
+                new ExtraContributionResponse();
         response.setId(savedContribution.getId());
         response.setUserId(savedContribution.getUser().getId());
         response.setMemberName(savedContribution.getUser().getName());
@@ -67,7 +79,14 @@ public class ExtraContributionServiceImpl implements ExtraContributionService {
                 savedContribution.getContributionDate());
         response.setProofUrl(savedContribution.getProofUrl());
         response.setStatus(savedContribution.getStatus());
-        response.setApprovedByName(null);
+
+        if (savedContribution.getApprovedBy() != null) {
+            response.setApprovedByName(
+                    savedContribution.getApprovedBy().getName());
+        } else {
+            response.setApprovedByName(null);
+        }
+
         response.setCreatedAt(savedContribution.getCreatedAt());
 
         return response;
