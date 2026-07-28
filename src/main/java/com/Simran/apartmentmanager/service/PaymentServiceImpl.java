@@ -34,51 +34,49 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional
     public PaymentResponse uploadPayment(PaymentUploadRequest request) {
 
-        // Step 1 - Get logged in member
+        // Step 1 - Get logged in user
         String email = SecurityContextHolder.getContext()
                 .getAuthentication().getName();
 
-        User user = userRepository.findByEmail(email)
+        User member = userRepository.findByEmail(email)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("User not found"));
 
-        // Step 2 - Find payment record for this cycle and user
+        // Step 2 - Find payment record
         PaymentRecord paymentRecord = paymentRecordRepository
-                .findByCycleIdAndUserId(request.getCycleId(), user.getId())
+                .findByCycleIdAndUserId(
+                        request.getCycleId(), member.getId())
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Payment record not found"));
+                        new ResourceNotFoundException(
+                                "Payment record not found"));
 
-        // Step 3 - Check if already paid
-        if (paymentRecord.getStatus().equals("PAID")) {
-            throw new BadRequestException("Already paid for this cycle!");
-        }
-
-        if (paymentRecord.getStatus().equals("UNDER_REVIEW")) {
+        // Step 3 - Check if already paid or under review
+        if (paymentRecord.getStatus().equals("PAID") ||
+                paymentRecord.getStatus().equals("UNDER_REVIEW")) {
             throw new BadRequestException(
-                    "Payment already submitted and is under review!");
+                    "Payment already submitted for this cycle!");
         }
 
-        // Step 4 - Check member credit balance
+        // Step 4 - Check credit balance
         BigDecimal creditBalance = memberCreditService
-                .getCreditBalance(user.getId());
+                .getCreditBalance(member.getId());
         BigDecimal amountDue = paymentRecord.getFinalDue();
 
         BigDecimal creditUsed;
         BigDecimal newFinalDue;
 
         if (creditBalance.compareTo(amountDue) >= 0) {
-            // Credit fully covers the due amount
             creditUsed = amountDue;
             newFinalDue = BigDecimal.ZERO;
         } else {
-            // Credit partially covers or zero credit
             creditUsed = creditBalance;
             newFinalDue = amountDue.subtract(creditBalance);
         }
 
-        // Step 5 - Deduct credit if any was used
+        // Step 5 - Deduct credit if any
         if (creditUsed.compareTo(BigDecimal.ZERO) > 0) {
-            memberCreditService.deductCredit(user.getId(), creditUsed);
+            memberCreditService.deductCredit(
+                    member.getId(), creditUsed);
         }
 
         // Step 6 - Update payment record
@@ -87,12 +85,21 @@ public class PaymentServiceImpl implements PaymentService {
         paymentRecord.setScreenshotUrl(request.getScreenshotUrl());
         paymentRecord.setCreditUsed(creditUsed);
         paymentRecord.setFinalDue(newFinalDue);
-        paymentRecord.setStatus("UNDER_REVIEW");
         paymentRecord.setPaymentDate(LocalDate.now());
 
-        PaymentRecord savedRecord = paymentRecordRepository.save(paymentRecord);
+        // Step 7 - If Pradhana → auto approve payment
+        // If Member → set UNDER_REVIEW for Pradhana approval
+        if (member.getRole().equals("PRADHANA")) {
+            paymentRecord.setStatus("PAID");
+            paymentRecord.setPaidAmount(newFinalDue);
+        } else {
+            paymentRecord.setStatus("UNDER_REVIEW");
+        }
 
-        // Step 7 - Build response directly
+        PaymentRecord savedRecord =
+                paymentRecordRepository.save(paymentRecord);
+
+        // Step 8 - Build response
         PaymentResponse response = new PaymentResponse();
         response.setId(savedRecord.getId());
         response.setCycleId(savedRecord.getCycle().getId());
