@@ -32,6 +32,15 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginResponse login(LoginRequest request) {
+        // Step 2 - Load user from DB
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found"));
+
+        //if user is deactivated then throw an error
+        if (!user.getIsActive()) {
+            throw new BadRequestException("Account is deactivated.");
+        }
 
         // Step 1 - Verify email and password
         authenticationManager.authenticate(
@@ -40,11 +49,6 @@ public class AuthServiceImpl implements AuthService {
                         request.getPassword()
                 )
         );
-
-        // Step 2 - Load user from DB
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("User not found"));
 
         // Step 3 - Generate JWT token
         String token = jwtUtil.generateToken(
@@ -55,7 +59,7 @@ public class AuthServiceImpl implements AuthService {
         // Step 4 - Return response
         return new LoginResponse(
                 token,
-                user.getRole(),
+                user.getRole().toUpperCase(),
                 user.getIsPasswordChanged()
         );
     }
